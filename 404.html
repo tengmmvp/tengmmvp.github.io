@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/shared/theme.css">
   <style>
     .notfound { padding: var(--s16) 0; }
-    .notfound h1 { font-size: 4rem; letter-spacing: -.03em; margin: var(--s2) 0 var(--s3); }
+    .notfound-title { font-size: 4rem; letter-spacing: -.03em; margin: 0 0 var(--s3); }
     .notfound p { color: var(--color-text-muted); }
     .notfound-links { display: flex; gap: var(--s3); margin-top: var(--s6); flex-wrap: wrap; }
   </style>
@@ -32,8 +32,10 @@
 <!--gen:chrome:header:end-->
 
   <main class="container notfound">
-    <p class="section-kicker">Error 404</p>
-    <h1>这一页走丢了</h1>
+    <div class="section-head">
+      <span class="section-kicker">Error 404</span>
+      <h1 class="notfound-title">这一页走丢了</h1>
+    </div>
     <p>链接可能过期，或者从未存在过。</p>
     <p class="notfound-links">
       <a class="btn" href="/">回主页</a>

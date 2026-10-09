@@ -30,8 +30,9 @@
     .entrances { padding: var(--s4) 0 var(--s8); }
     .entrance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
     .entrance { display: block; padding: var(--s6); text-decoration: none; color: inherit; }
-    .entrance-kicker { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--color-accent); margin-bottom: var(--s2); }
-    .entrance-title { margin-bottom: var(--s2); }
+    .entrance-head { display: flex; align-items: stretch; gap: var(--s3); margin-bottom: var(--s2); }
+    .entrance-kicker { font-family: var(--font-mono); font-size: .72rem; line-height: 1; letter-spacing: .12em; text-transform: uppercase; color: var(--color-accent); display: inline-flex; align-items: flex-start; gap: var(--s3); }
+    .entrance-kicker::after { content: ""; display: block; width: 1px; height: 110%; background: var(--color-border); align-self: center; }
     .entrance-desc { color: var(--color-text-muted); margin-bottom: var(--s3); }
     .entrance-stat { font-family: var(--font-mono); font-size: .74rem; color: var(--color-text-faint); border-top: var(--hairline) solid var(--color-border); padding-top: var(--s2); }
 
@@ -73,7 +74,7 @@
       <div class="container hero-inner">
         <img class="hero-avatar" src="/assets/img/avatar.svg" alt="任志启嘉" width="96" height="96">
         <div class="hero-text">
-          <p class="hero-kicker">Have fun, have story.</p>
+          <p class="hero-kicker">One pixel sparks infinite possibilities; one idea sparks endless creativity.</p>
           <h1 class="hero-name">任志启嘉</h1>
           <p class="hero-bio">终身学习者。写代码，也写文字。</p>
           <p class="hero-socials">
@@ -90,14 +91,12 @@
       <div class="container">
         <div class="entrance-grid">
           <a class="entrance card" href="/blog/">
-            <p class="entrance-kicker">Writing</p>
-            <h2 class="entrance-title">博客</h2>
+            <div class="entrance-head"><p class="entrance-kicker">Writing</p><h2 class="entrance-title">博客</h2></div>
             <p class="entrance-desc">文章收录于此，散落在各处的思考都指向这里。</p>
             <p class="entrance-stat"><span data-stat="blog-count">1</span> 篇文章 · 最新：<span data-stat="blog-latest">示例条目 —— 在本地控制台里删掉我</span></p>
           </a>
           <a class="entrance card" href="/tools/">
-            <p class="entrance-kicker">Toolbox</p>
-            <h2 class="entrance-title">工具</h2>
+            <div class="entrance-head"><p class="entrance-kicker">Toolbox</p><h2 class="entrance-title">工具</h2></div>
             <p class="entrance-desc">自制的在线小工具，顺手、趁手、随手可用。</p>
             <p class="entrance-stat"><span data-stat="tools-count">1</span> 个工具 · 最新：<span data-stat="tools-latest">JSON 整理台</span></p>
           </a>
