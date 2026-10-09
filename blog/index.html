@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博客 · TengMMVP</title>
+  <meta name="description" content="TengMMVP 的文章索引：散落各处的思考都指向这里。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preload" href="/assets/fonts/eb-garamond-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/shared/theme.css">
+  <style>
+    .page-intro { padding: var(--s12) 0 var(--s6); }
+    .list-toolbar { display: grid; gap: var(--s3); margin-bottom: var(--s6); }
+    @media (min-width: 641px) { .list-toolbar { grid-template-columns: minmax(240px, 1fr) 2fr; align-items: center; } }
+    .entry-list { display: grid; gap: var(--s6); padding-bottom: var(--s8); }
+    .entry-date { font-family: var(--font-mono); font-size: .74rem; color: var(--color-text-faint); margin-bottom: var(--s1); }
+    .entry-title { margin-bottom: var(--s1); }
+    .entry-summary { color: var(--color-text-muted); margin-bottom: var(--s2); }
+  </style>
+</head>
+<body>
+  <noscript><p class="noscript-note">已展示静态内容，筛选与搜索需要 JavaScript。</p></noscript>
+
+<!--gen:chrome:header:start-->
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="site-logo">TengMMVP<span class="dot">.</span></a>
+      <nav class="site-nav" aria-label="主导航">
+        <a href="/">首页</a>
+        <a href="/blog/" aria-current="page">博客</a>
+        <a href="/tools/">工具</a>
+        <button class="theme-toggle" id="themeToggle" type="button">主题</button>
+      </nav>
+    </div>
+  </header>
+<!--gen:chrome:header:end-->
+
+  <main>
+    <section class="page-intro">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-kicker">Writing</span>
+          <h1 class="section-title">博客</h1>
+        </div>
+        <div class="list-toolbar">
+          <input class="input" id="blogSearch" type="search" placeholder="搜索标题 / 摘要 / 标签…" aria-label="搜索文章">
+          <div class="chips" id="blogTags" role="group" aria-label="按标签筛选"></div>
+        </div>
+        <p class="visually-hidden" id="listStatus" role="status" aria-live="polite"></p>
+        <div class="entry-list" data-region="blog-list">
+<!--gen:blog-list:start-->
+          <article class="entry">
+            <p class="entry-date">2026 年 10 月 9 日</p>
+            <h3 class="entry-title"><a href="https://blog.csdn.net/TengMMVP" target="_blank" rel="noopener noreferrer">示例条目 —— 在本地控制台里删掉我</a></h3>
+            <p class="entry-summary">这是一条示例：真实使用时，把标题、链接、日期、摘要换成你的文章信息即可。</p>
+            <p class="entry-meta chips">
+            <span class="chip">blog.csdn.net</span>
+            <span class="chip">示例</span>
+            </p>
+          </article>
+<!--gen:blog-list:end-->
+        </div>
+      </div>
+    </section>
+  </main>
+
+<!--gen:chrome:footer:start-->
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 TengMMVP · 沉淀思考，分享知识</p>
+    </div>
+  </footer>
+<!--gen:chrome:footer:end-->
+
+  <script type="module" src="/shared/page-blog.js"></script>
+</body>
+</html>

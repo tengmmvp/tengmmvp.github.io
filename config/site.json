@@ -1,0 +1,58 @@
+{
+  "$schema": "./schema/site.schema.json",
+  "version": 1,
+  "site": {
+    "name": "TengMMVP",
+    "slogan": "Have fun, have story.",
+    "description": "沉淀思考，分享知识",
+    "footerText": "沉淀思考，分享知识",
+    "icp": ""
+  },
+  "profile": {
+    "name": "任志启嘉",
+    "bio": "终身学习者。写代码，也写文字。",
+    "avatar": "/assets/img/avatar.svg",
+    "now": "",
+    "socials": [
+      {
+        "type": "github",
+        "label": "GitHub",
+        "url": "https://github.com/TengMMVP"
+      },
+      {
+        "type": "csdn",
+        "label": "CSDN",
+        "url": "https://blog.csdn.net/TengMMVP"
+      }
+    ]
+  },
+  "projects": [],
+  "entrances": [
+    {
+      "id": "blog",
+      "title": "博客",
+      "kicker": "Writing",
+      "desc": "文章收录于此，散落在各处的思考都指向这里。",
+      "href": "/blog/"
+    },
+    {
+      "id": "tools",
+      "title": "工具",
+      "kicker": "Toolbox",
+      "desc": "自制的在线小工具，顺手、趁手、随手可用。",
+      "href": "/tools/"
+    }
+  ],
+  "recent": {
+    "blogCount": 4
+  },
+  "sources": {
+    "blog": "/config/blog.json",
+    "tools": "/config/tools.json",
+    "dirStrategy": "manifest",
+    "github": {
+      "user": "tengmmvp",
+      "repo": "tengmmvp.github.io"
+    }
+  }
+}

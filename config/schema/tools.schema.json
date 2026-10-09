@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "tools.json — 工具注册表",
+  "description": "工具卡片墙的数据源。本站工具用 path，外链工具用 url，二选一。",
+  "type": "object",
+  "required": ["version", "entries"],
+  "properties": {
+    "version": { "type": "integer" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "description": "唯一标识，小写 kebab-case，与 tools/ 下文件夹同名" },
+          "name": { "type": "string" },
+          "desc": { "type": "string" },
+          "category": { "type": "string", "description": "分类，如 开发 / 效率 / 文本" },
+          "path": { "type": "string", "description": "本站工具路径，带尾斜杠，如 /tools/json-tool/" },
+          "url": { "type": "string", "description": "外链工具地址（与 path 二选一）" },
+          "order": { "type": "number", "description": "排序权重，小在前" },
+          "date": { "type": "string", "description": "上架日期 YYYY-MM-DD" }
+        }
+      }
+    }
+  }
+}

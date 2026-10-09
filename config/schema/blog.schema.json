@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "blog.json — 博客注册表",
+  "description": "博客链接目录：每条指向外部平台文章。id 必须唯一（运行时另有 Map 去重兜底）。",
+  "type": "object",
+  "required": ["version", "entries"],
+  "properties": {
+    "version": { "type": "integer" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "url"],
+        "properties": {
+          "id": { "type": "string", "description": "唯一标识（小写 kebab-case），重复会被运行时忽略后者" },
+          "title": { "type": "string" },
+          "url": { "type": "string", "description": "文章链接，必须 http(s):// 开头" },
+          "date": { "type": "string", "pattern": "^\\d{4}(-\\d{1,2}){0,2}$", "description": "如 2026-10-09 或 2026-10" },
+          "summary": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

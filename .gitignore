@@ -1,0 +1,15 @@
+# 本地控制台
+/admin/
+
+# 杂物
+/.playwright-mcp/
+/.claude/settings.local.json
+/.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时
+*.log
+*.tmp
+node_modules/

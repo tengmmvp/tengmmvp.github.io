@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "site.json — 站点总配置",
+  "description": "站点信息、个人名片、入口区块、数据源声明的唯一事实源。",
+  "type": "object",
+  "required": ["version", "site", "profile", "entrances", "sources"],
+  "properties": {
+    "version": { "type": "integer", "description": "配置格式版本，目前为 1" },
+    "site": {
+      "type": "object",
+      "required": ["name", "slogan"],
+      "properties": {
+        "name": { "type": "string", "description": "站名（logo 与浏览器标题）" },
+        "slogan": { "type": "string", "description": "一句话口号（首页首屏）" },
+        "description": { "type": "string", "description": "站点描述（副标题）" },
+        "footerText": { "type": "string", "description": "页脚文案" },
+        "icp": { "type": "string", "description": "备案号（可空）" }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "bio": { "type": "string", "description": "一句话自我介绍" },
+        "avatar": { "type": "string", "description": "头像路径，如 /assets/img/avatar.svg" },
+        "now": { "type": "string", "description": "「现在」状态行（可空，空则不显示）" },
+        "socials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "url"],
+            "properties": {
+              "type": { "type": "string", "description": "github / csdn / zhihu / email 等" },
+              "label": { "type": "string", "description": "显示名" },
+              "url": { "type": "string", "description": "必须以 http(s):// 或 mailto: 开头" }
+            }
+          }
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "description": "精选项目，空数组则首页整块隐藏",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "desc": { "type": "string" },
+          "link": { "type": "string" },
+          "tech": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "entrances": {
+      "type": "array",
+      "description": "首页入口区块（数据驱动，加第三个入口只需加一条）",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "href"],
+        "properties": {
+          "id": { "type": "string", "description": "唯一标识，用于统计挂钩（blog/tools 有内置统计）" },
+          "title": { "type": "string" },
+          "kicker": { "type": "string", "description": "等宽小标（英文点题）" },
+          "desc": { "type": "string" },
+          "href": { "type": "string", "description": "站内路径带尾斜杠，如 /blog/" }
+        }
+      }
+    },
+    "recent": {
+      "type": "object",
+      "properties": {
+        "blogCount": { "type": "integer", "minimum": 1, "maximum": 10, "description": "首页最近博客条数" }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "required": ["blog", "tools"],
+      "properties": {
+        "blog": { "type": "string", "description": "博客注册表路径（支持绝对 URL 外置）" },
+        "tools": { "type": "string", "description": "工具注册表路径（支持绝对 URL 外置）" },
+        "dirStrategy": { "type": "string", "enum": ["manifest", "github-api"], "description": "目录读取策略，默认 manifest" },
+        "github": {
+          "type": "object",
+          "properties": {
+            "user": { "type": "string" },
+            "repo": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

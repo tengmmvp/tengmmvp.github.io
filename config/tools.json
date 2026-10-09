@@ -1,0 +1,15 @@
+{
+  "$schema": "./schema/tools.schema.json",
+  "version": 1,
+  "entries": [
+    {
+      "id": "json-tool",
+      "name": "JSON 整理台",
+      "desc": "字段排序与格式化，暗色终端风格的 JSON 工作台。",
+      "category": "开发",
+      "path": "/tools/json-tool/",
+      "order": 1,
+      "date": "2026-10-09"
+    }
+  ]
+}

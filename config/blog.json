@@ -1,0 +1,14 @@
+{
+  "$schema": "./schema/blog.schema.json",
+  "version": 1,
+  "entries": [
+    {
+      "id": "hello-world",
+      "title": "示例条目 —— 在本地控制台里删掉我",
+      "url": "https://blog.csdn.net/TengMMVP",
+      "date": "2026-10-09",
+      "summary": "这是一条示例：真实使用时，把标题、链接、日期、摘要换成你的文章信息即可。",
+      "tags": ["示例"]
+    }
+  ]
+}
