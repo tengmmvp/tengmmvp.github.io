@@ -373,6 +373,19 @@
 
   .error-jump { margin-top: 10px; font-size: 12.5px; color: var(--amber); }
 
+  /* 大输入降级提示 */
+  .large-notice {
+    margin: 12px 16px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 8px;
+    background: var(--elevated);
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
   /* 状态栏 */
   .statusbar {
     flex: none;
@@ -537,13 +550,15 @@
   const collatorZh = new Intl.Collator('zh', { numeric: true, sensitivity: 'base' });
   const HIGHLIGHT_LIMIT = 300000; // 超过跳过染色
   const TREE_NODE_LIMIT = 50000;
+  const LARGE_INPUT_LIMIT = 500 * 1024; // 输入超过则降级，跳过重渲染
+  const NON_WS_RE = /\S/; // 判空用，避免 trim 分配副本
 
   const PREF_KEY = 'json-tool-prefs';
   const DRAFT_KEY = 'json-tool-draft';
 
   let lastError = null; // { line, col, pos, msg }
   let lastResult = '';
-  let lastTreeData = null; // 排序后的数据
+  let lastTreeData = null; // 解析结果
   let debounceTimer = 0;
   let draftMaxTimer = 0;
   let currentGutterInner = null;
@@ -814,7 +829,12 @@
 
   /* 行号 */
 
-  function updateInputGutter() {
+  function updateInputGutter(degraded) {
+    // 大输入跳过行号渲染，避免大范围重排
+    if (degraded) {
+      inputGutterInner.textContent = '';
+      return;
+    }
     const lines = input.value.split('\n').length;
     if (lines <= 1 && input.value === '') {
       inputGutterInner.textContent = '';
@@ -843,13 +863,14 @@
   /* 渲染主流程 */
 
   function render() {
-    const source = input.value.trim();
-    updateInputGutter();
-    flushDraft();
+    // 解析与错误定位基于原文，避免前导空白错位
+    const raw = input.value;
+    const degraded = raw.length > LARGE_INPUT_LIMIT;
+    updateInputGutter(degraded);
 
     orderControl.classList.toggle('disabled', !sortToggle.checked);
 
-    if (!source) {
+    if (!NON_WS_RE.test(raw)) {
       lastError = null;
       lastResult = '';
       lastTreeData = null;
@@ -860,48 +881,73 @@
       return;
     }
 
-    const lines = input.value.split('\n').length;
-    const chars = input.value.length;
+    const lines = raw.split('\n').length;
+    const chars = raw.length;
 
     const t0 = performance.now();
     let data;
     try {
-      data = JSON.parse(source);
+      data = JSON.parse(raw);
     } catch (err) {
-      lastError = extractErrorPos(err, source);
-      lastResult = '';
-      lastTreeData = null;
-      renderError(lastError);
-      setStatus('err', lastError.line
-        ? 'JSON 有误 — 第 ' + lastError.line + ' 行 第 ' + lastError.col + ' 列'
-        : 'JSON 有误');
-      setStats(lines + ' 行，' + chars + ' 字符');
-      copyBtn.disabled = downloadBtn.disabled = true;
-      return;
+      // 仅剥离边缘不可见空白重试，正文异常仍按原文定位
+      const stripped = raw.trim();
+      if (stripped !== raw) {
+        try { data = JSON.parse(stripped); } catch (e) { /* 忽略 */ }
+      }
+      if (data === undefined) {
+        lastError = extractErrorPos(err, raw);
+        lastResult = '';
+        lastTreeData = null;
+        renderError(lastError, degraded);
+        setStatus('err', lastError.line
+          ? 'JSON 有误 — 第 ' + lastError.line + ' 行 第 ' + lastError.col + ' 列'
+          : 'JSON 有误');
+        setStats(lines + ' 行，' + chars + ' 字符');
+        copyBtn.disabled = downloadBtn.disabled = true;
+        return;
+      }
     }
 
     const descending = document.querySelector('input[name="order"]:checked').value === 'desc';
     if (sortToggle.checked) data = sortDeep(data, descending);
     lastTreeData = data;
 
-    lastResult = JSON.stringify(data, null, currentIndent());
-    if (escapeToggle.checked) lastResult = escapeNonAscii(lastResult);
+    // 降级时不预构建结果串，导出时惰性生成
+    if (degraded) {
+      lastResult = '';
+    } else {
+      lastResult = JSON.stringify(data, null, currentIndent());
+      if (escapeToggle.checked) lastResult = escapeNonAscii(lastResult);
+    }
 
     const elapsed = (performance.now() - t0).toFixed(1);
-    const keys = countKeys(data);
-    const depth = maxDepth(data, 1);
 
-    renderOutput();
+    renderOutput(degraded);
 
     setStatus('ok', (sortToggle.checked
       ? (descending ? '已按降序排序，' : '已按升序排序，')
       : '未排序，') + indentLabel() + (escapeToggle.checked ? '，已转义 \\uXXXX' : ''));
-    setStats(lines + ' 行，' + chars + ' 字符，' + keys + ' 个键，深度 ' + depth + '，耗时 ' + elapsed + ' ms');
+    let stats = lines + ' 行，' + chars + ' 字符';
+    // 降级时跳过全树统计
+    if (!degraded) stats += '，' + countKeys(data) + ' 个键，深度 ' + maxDepth(data, 1) + '，耗时 ' + elapsed + ' ms';
+    setStats(stats);
     copyBtn.disabled = downloadBtn.disabled = false;
     lastError = null;
   }
 
-  function renderOutput() {
+  function largeNoticeBar() {
+    return el('div', 'large-notice',
+      '输入超过 ' + LARGE_INPUT_LIMIT / 1024 + ' KB，已跳过行号与输出渲染；语法检查、复制与下载不受影响。');
+  }
+
+  function renderOutput(degraded) {
+    // 大输入跳过输出渲染，避免长阻塞
+    if (degraded) {
+      currentGutterInner = null;
+      outputScroll.innerHTML = '';
+      outputScroll.prepend(largeNoticeBar());
+      return;
+    }
     const view = document.querySelector('input[name="view"]:checked').value;
 
     if (view === 'tree') {
@@ -937,7 +983,7 @@
 
   /* 错误渲染与跳转 */
 
-  function renderError(err) {
+  function renderError(err, degraded) {
     const posText = err.line ? '第 ' + err.line + ' 行 第 ' + err.col + ' 列' : '位置未知';
     const jumpText = err.pos !== null ? '<div class="error-jump">点击定位到出错位置</div>' : '';
     outputScroll.innerHTML =
@@ -948,6 +994,8 @@
           jumpText +
         '</div>' +
       '</div>';
+
+    if (degraded) outputScroll.prepend(largeNoticeBar());
 
     const card = document.getElementById('errorCard');
     if (card) {
@@ -1013,28 +1061,38 @@
     const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => { input.value = String(reader.result); render(); };
+    reader.onload = () => { input.value = String(reader.result); flushDraft(); render(); };
     reader.readAsText(file);
   });
 
+  // 惰性构建并记忆化，超大输入只在导出时序列化一次
+  function formattedResult() {
+    if (lastResult === '' && lastTreeData !== null) {
+      lastResult = JSON.stringify(lastTreeData, null, currentIndent());
+      if (escapeToggle.checked) lastResult = escapeNonAscii(lastResult);
+    }
+    return lastResult;
+  }
+
   // 复制
   copyBtn.addEventListener('click', () => {
-    if (!lastResult) return;
+    const text = formattedResult();
+    if (!text) return;
     const done = () => {
       copyBtn.textContent = '已复制 ✓';
       copyBtn.classList.add('copied');
       setTimeout(() => { copyBtn.textContent = '复制结果'; copyBtn.classList.remove('copied'); }, 1300);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(lastResult).then(done).catch(() => fallbackCopy(done));
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
     } else {
-      fallbackCopy(done);
+      fallbackCopy(text, done);
     }
   });
 
-  function fallbackCopy(done) {
+  function fallbackCopy(text, done) {
     const ta = document.createElement('textarea');
-    ta.value = lastResult;
+    ta.value = text;
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
     document.body.appendChild(ta);
@@ -1045,12 +1103,13 @@
 
   // 下载
   downloadBtn.addEventListener('click', () => {
-    if (!lastResult) return;
+    const text = formattedResult();
+    if (!text) return;
     const stamp = new Date();
     const pad = n => String(n).padStart(2, '0');
     const name = 'json-' + stamp.getFullYear() + pad(stamp.getMonth() + 1) + pad(stamp.getDate())
                + '-' + pad(stamp.getHours()) + pad(stamp.getMinutes()) + pad(stamp.getSeconds()) + '.json';
-    const blob = new Blob([lastResult], { type: 'application/json;charset=utf-8' });
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1062,6 +1121,7 @@
   // 清空
   clearBtn.addEventListener('click', () => {
     input.value = '';
+    flushDraft();
     render();
     input.focus();
   });

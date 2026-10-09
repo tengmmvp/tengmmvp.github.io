@@ -15,7 +15,7 @@
           "id": { "type": "string", "description": "唯一标识（小写 kebab-case），重复会被运行时忽略后者" },
           "title": { "type": "string" },
           "url": { "type": "string", "description": "文章链接，必须 http(s):// 开头" },
-          "date": { "type": "string", "pattern": "^\\d{4}(-\\d{1,2}){0,2}$", "description": "如 2026-10-09 或 2026-10" },
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{1,2}(-\\d{1,2})?$", "description": "如 2026-10-09 或 2026-10" },
           "summary": { "type": "string" },
           "tags": { "type": "array", "items": { "type": "string" } }
         }

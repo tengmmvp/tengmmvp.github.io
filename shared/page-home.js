@@ -8,7 +8,7 @@ initTheme('#themeToggle');
   const onStale = at => showStale(main, at);
   try {
     const cfg = await getConfig({ onStale });
-    document.title = `${cfg.site.name} · ${cfg.site.slogan}`;
+    document.title = [cfg.site.name, cfg.site.slogan].filter(Boolean).join(' · ');
 
     const [blog, tools] = await Promise.allSettled([
       getJSON(cfg.sources.blog, { onStale }),

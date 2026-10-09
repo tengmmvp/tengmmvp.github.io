@@ -2,13 +2,15 @@
 
 const SITE_URL = '/config/site.json';
 const LS_PREFIX = 'tmm:';
+const CHIP_ATTR = 'data-value';
 
 /* 工具函数 */
 
 /** URL 校验 */
 export function safeUrl(u) {
   const s = String(u ?? '').trim();
-  if (/^(https?:\/\/|\/|#|mailto:)/i.test(s)) return s;
+  /* 控制字符会被浏览器剥离，剥离后可绕过协议白名单 */
+  if (/^(https?:\/\/|mailto:|#|\/(?!\/|\\))/i.test(s) && !/[\u0000-\u001F\u007F]/.test(s)) return s;
   return '';
 }
 
@@ -116,9 +118,10 @@ export async function listDir(dir, opts = {}) {
     const list = await res.json();
     return list.filter(f => f.type === 'file').map(f => ({ name: f.name, path: f.path }));
   }
-  const manifest = await getJSON(dir.replace(/\/?$/, '/') + 'index.json');
+  const base = dir.replace(/\/?$/, '/');
+  const manifest = await getJSON(base + 'index.json');
   return (Array.isArray(manifest) ? manifest : manifest.files || [])
-    .map(f => (typeof f === 'string' ? { name: f, path: `${dir}/${f}` } : f));
+    .map(f => (typeof f === 'string' ? { name: f, path: base + f } : f));
 }
 
 /* 注册表处理 */
@@ -147,6 +150,49 @@ export function renderList({ container, items, render, empty = '暂无内容', s
   }
   if (!n) container.append(el('p', { class: 'empty-note' }, empty));
   if (status) status.textContent = n ? `共 ${n} 条` : '没有匹配的内容';
+}
+
+/** 列表筛选：facet 并集派生标签栏，select 判标签，fields 拼搜索文本 */
+export function initFilter({ list, bar, search, facet, select, fields, render, container, status }) {
+  const state = { q: '', tag: '' };
+  const values = [...new Set(list.flatMap(facet).filter(Boolean))];
+  const apply = () => {
+    const q = state.q.toLowerCase();
+    renderList({
+      container,
+      items: list.filter(it => select(it, state.tag)
+        && (!q || fields(it).filter(Boolean).join(' ').toLowerCase().includes(q))),
+      render,
+      status,
+    });
+  };
+
+  if (bar && values.length) {
+    const btn = (v, pressed) => el('button', {
+      class: 'chip chip--filter', type: 'button',
+      'aria-pressed': String(pressed), [CHIP_ATTR]: v,
+    }, v || '全部');
+    bar.append(btn('', true));
+    values.forEach(v => bar.append(btn(v, false)));
+    bar.addEventListener('click', ev => {
+      const target = ev.target.closest(`button[${CHIP_ATTR}]`);
+      if (!target) return;
+      state.tag = target.getAttribute(CHIP_ATTR) || '';
+      bar.querySelectorAll(`button[${CHIP_ATTR}]`)
+        .forEach(b => b.setAttribute('aria-pressed', String(b === target)));
+      if (search) state.q = search.value.trim();
+      apply();
+    });
+  }
+
+  if (search) {
+    search.addEventListener('input', debounce(() => {
+      state.q = search.value.trim();
+      apply();
+    }));
+  }
+
+  apply();
 }
 
 /** 博客条目卡片 */

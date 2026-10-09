@@ -1,5 +1,5 @@
 /* page-tools.js — 工具列表 */
-import { getConfig, getJSON, dedupe, renderList, el, initTheme, showError, showStale, debounce } from './tmm.js';
+import { getConfig, getJSON, dedupe, el, initTheme, showError, showStale, initFilter } from './tmm.js';
 
 initTheme('#themeToggle');
 
@@ -30,19 +30,6 @@ function toolNode(t) {
   );
 }
 
-const state = { q: '', cat: '' };
-
-function apply(list, region, status) {
-  const q = state.q.toLowerCase();
-  const items = list.filter(t => {
-    if (state.cat && (t.category || '') !== state.cat) return false;
-    if (!q) return true;
-    const hay = [t.name, t.desc, t.category].filter(Boolean).join(' ').toLowerCase();
-    return hay.includes(q);
-  });
-  renderList({ container: region, items, render: toolNode, status });
-}
-
 (async () => {
   const main = document.querySelector('main');
   const onStale = at => showStale(main, at);
@@ -53,40 +40,17 @@ function apply(list, region, status) {
       .slice()
       .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
 
-    const region = document.querySelector('[data-region="tools-list"]');
-    const status = document.getElementById('listStatus');
-    const search = document.getElementById('toolSearch');
-    const catBar = document.getElementById('toolCats');
-
-    const cats = [...new Set(list.map(t => t.category).filter(Boolean))];
-    if (catBar && cats.length) {
-      catBar.append(el('button', {
-        class: 'chip chip--filter', type: 'button',
-        'aria-pressed': 'true', 'data-cat': '',
-      }, '全部'));
-      cats.forEach(c => catBar.append(el('button', {
-        class: 'chip chip--filter', type: 'button',
-        'aria-pressed': 'false', 'data-cat': c,
-      }, c)));
-      catBar.addEventListener('click', ev => {
-        const btn = ev.target.closest('button[data-cat]');
-        if (!btn) return;
-        state.cat = btn.dataset.cat;
-        catBar.querySelectorAll('button[data-cat]')
-          .forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
-        if (search) state.q = search.value.trim();
-        apply(list, region, status);
-      });
-    }
-
-    if (search) {
-      search.addEventListener('input', debounce(() => {
-        state.q = search.value.trim();
-        apply(list, region, status);
-      }));
-    }
-
-    apply(list, region, status);
+    initFilter({
+      list,
+      bar: document.getElementById('toolCats'),
+      search: document.getElementById('toolSearch'),
+      facet: t => (t.category ? [t.category] : []),
+      select: (t, cat) => !cat || (t.category || '') === cat,
+      fields: t => [t.name, t.desc, t.category],
+      render: toolNode,
+      container: document.querySelector('[data-region="tools-list"]'),
+      status: document.getElementById('listStatus'),
+    });
   } catch (err) {
     showError(main, err.message);
   }

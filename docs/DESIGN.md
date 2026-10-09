@@ -16,10 +16,10 @@
 
 ## 行为契约
 
-- `tmm.js` 以 ESM 具名导出提供 `safeUrl`、`fmtDate`、`pad`、`hostOf`、`el`、`debounce`、`getJSON`、`getConfig`、`listDir`、`dedupe`、`renderList`、`entryNode`、`showError`、`showStale`、`initTheme`；
+- `tmm.js` 以 ESM 具名导出提供 `safeUrl`、`fmtDate`、`pad`、`hostOf`、`el`、`debounce`、`getJSON`、`getConfig`、`listDir`、`dedupe`、`renderList`、`initFilter`、`entryNode`、`showError`、`showStale`、`initTheme`；
 - 页面壳内的静态骨架由 `<!--gen:REGION:start/end-->` 标记划分区域，控制台在保存配置时重新生成；
-- 工具沙盒以 `tools/<id>/index.html` 为入口，`data/index.json` 为可选的数据目录清单，`shared/back.js` 为可选挂件；
-- 控制台保存链为校验、备份、原子写、再生成四个页面壳与 sitemap；校验失败不写盘，再生成失败自动回滚。
+- 工具沙盒以 `tools/<id>/index.html` 为入口，`data/index.json` 为可选的数据目录清单，清单为字符串数组或 `{files:[...]}` 对象，`listDir` 两种皆收，`shared/back.js` 为可选挂件；
+- 控制台保存链为校验、备份、原子写、再生成四个页面壳、sitemap 与 robots；校验失败不写盘，再生成失败自动回滚。
 
 ## 关键决策
 
@@ -33,7 +33,7 @@
 
 ### 注册表而非目录扫描
 
-内容更新随 git push 以静态文件分发，前端不依赖 GitHub API。理由：匿名调用限额为每小时 60 次且按 IP 计，运营商 NAT 环境下额度会被无关流量耗尽；条件请求免计限额要求携带 Authorization，而公开静态站禁止内嵌令牌。目录读取由 `tmm.js` 的具名导出 `listDir` 提供，主站与工具沙盒均可引入；策略默认取站点配置 `sources.dirStrategy`，`manifest` 读取目录内的 `index.json` 清单，`github-api` 改走 GitHub API。主站页面的 CSP 不放行 `api.github.com`，仅用 `manifest`；`github-api` 仅适用于不声明 CSP 的工具沙盒。
+数据源 `sources` 恒为站内路径，内容更新随 git push 以静态文件分发，前端不依赖 GitHub API。理由：匿名调用限额为每小时 60 次且按 IP 计，运营商 NAT 环境下额度会被无关流量耗尽；条件请求免计限额要求携带 Authorization，而公开静态站禁止内嵌令牌。目录读取由 `tmm.js` 的具名导出 `listDir` 提供，主站与工具沙盒均可引入；策略默认取站点配置 `sources.dirStrategy`，`manifest` 读取目录内的 `index.json` 清单，`github-api` 改走 GitHub API。主站页面的 CSP 不放行 `api.github.com`，仅用 `manifest`；`github-api` 仅适用于不声明 CSP 的工具沙盒。
 
 ### 缓存
 
@@ -44,7 +44,7 @@
 - 注册表字符串仅经 `el` 工厂以文本节点进入 DOM；
 - 链接经 `safeUrl` 校验，仅放行 http(s)、站内路径、锚点与 mailto，杜绝 `javascript:` 伪协议；
 - 外部链接一律 `rel="noopener noreferrer"`；
-- 四个页面壳声明同一份 CSP，含 `form-action 'self'`；`connect-src` 恒为 `self`，`sources` 声明 https 外源时由再生成动态追加；工具沙盒页不声明，保持自包含；
+- 四个页面壳声明同一份 CSP，`connect-src` 恒为 `self`，并含 `form-action 'self'`；工具沙盒页不声明，保持自包含；
 - 运行时零第三方依赖；本地控制台仅绑定 127.0.0.1 并限制写路径。
 
 ### 字体

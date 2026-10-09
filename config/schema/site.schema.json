@@ -33,7 +33,7 @@
             "properties": {
               "type": { "type": "string", "description": "github / csdn / zhihu / email 等" },
               "label": { "type": "string", "description": "显示名" },
-              "url": { "type": "string", "description": "必须以 http(s):// 或 mailto: 开头" }
+              "url": { "type": "string", "description": "http(s) 或 mailto 链接，或以 / 开头的站内路径" }
             }
           }
         }
@@ -48,7 +48,7 @@
         "properties": {
           "name": { "type": "string" },
           "desc": { "type": "string" },
-          "link": { "type": "string" },
+          "link": { "type": "string", "description": "http(s)、mailto 或以 / 开头的站内路径，可空" },
           "tech": { "type": "array", "items": { "type": "string" } }
         }
       }
@@ -64,7 +64,7 @@
           "title": { "type": "string" },
           "kicker": { "type": "string", "description": "等宽小标（英文点题）" },
           "desc": { "type": "string" },
-          "href": { "type": "string", "description": "站内路径带尾斜杠，如 /blog/" }
+          "href": { "type": "string", "description": "站内路径以 / 开头，如 /blog/，也可为 http(s) 或 mailto 链接" }
         }
       }
     },
@@ -78,8 +78,8 @@
       "type": "object",
       "required": ["blog", "tools"],
       "properties": {
-        "blog": { "type": "string", "description": "博客注册表路径（支持绝对 URL 外置）" },
-        "tools": { "type": "string", "description": "工具注册表路径（支持绝对 URL 外置）" },
+        "blog": { "type": "string", "pattern": "^/(?!/)", "description": "博客注册表站内路径，如 /config/blog.json" },
+        "tools": { "type": "string", "pattern": "^/(?!/)", "description": "工具注册表站内路径，如 /config/tools.json" },
         "dirStrategy": { "type": "string", "enum": ["manifest", "github-api"], "description": "目录读取策略，默认 manifest" },
         "github": {
           "type": "object",

@@ -24,9 +24,7 @@
   --bone: #f2f1ed;        /* 卡片 */
   --linen: #e6e5e0;       /* 次级面 */
   --stone: #cdcdc9;       /* 边框 */
-  --mist: #a1a19f;        /* 三级文字 */
   --driftwood: #84847e;   /* 二级文字 */
-  --ash: #7a7974;         /* 弱标签 */
   --ink: #26251e;         /* 正文 */
   --ember: #f54e00;       /* 强调 */
   --ember-deep: #c84100;  /* 强调·深 */
@@ -50,6 +48,8 @@
   /* 间距 */
   --s1: .25rem; --s2: .5rem;  --s3: .75rem; --s4: 1rem;
   --s5: 1.25rem; --s6: 1.5rem; --s8: 2rem;  --s12: 3rem;  --s16: 4rem;
+
+  /* 圆角、描边与阴影 */
   --radius: 4px;
   --hairline: 1px;
   --shadow-soft: 0 1px 2px rgba(38, 37, 30, .05), 0 8px 24px rgba(38, 37, 30, .06);
