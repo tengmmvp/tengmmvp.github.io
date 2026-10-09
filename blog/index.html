@@ -3,9 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--gen:head-title:start-->
   <title>博客 · TengMMVP</title>
-  <meta name="description" content="TengMMVP 的文章索引：散落各处的思考都指向这里。">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'">
+  <meta name="description" content="TengMMVP 的文章索引：沉淀思考，分享知识。">
+<!--gen:head-title:end-->
+<!--gen:csp:start-->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!--gen:csp:end-->
+  <script src="/shared/theme-boot.js"></script>
   <link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/assets/icons/favicon-32x32.png" type="image/png" sizes="32x32">
@@ -14,6 +19,7 @@
   <link rel="manifest" href="/assets/icons/site.webmanifest">
   <link rel="preload" href="/assets/fonts/eb-garamond-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/jetbrains-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="modulepreload" href="/shared/tmm.js">
   <link rel="stylesheet" href="/shared/theme.css">
   <style>
     .page-intro { padding: var(--s12) 0 var(--s6); }

@@ -1,5 +1,5 @@
 /* page-tools.js — 工具列表 */
-import { getConfig, getJSON, dedupe, renderList, el, initTheme, showError } from './tmm.js';
+import { getConfig, getJSON, dedupe, renderList, el, initTheme, showError, showStale, debounce } from './tmm.js';
 
 initTheme('#themeToggle');
 
@@ -45,9 +45,10 @@ function apply(list, region, status) {
 
 (async () => {
   const main = document.querySelector('main');
+  const onStale = at => showStale(main, at);
   try {
-    const cfg = await getConfig();
-    const data = await getJSON(cfg.sources.tools);
+    const cfg = await getConfig({ onStale });
+    const data = await getJSON(cfg.sources.tools, { onStale });
     const list = dedupe(data.entries, 'id').list
       .slice()
       .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
@@ -73,15 +74,16 @@ function apply(list, region, status) {
         state.cat = btn.dataset.cat;
         catBar.querySelectorAll('button[data-cat]')
           .forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+        if (search) state.q = search.value.trim();
         apply(list, region, status);
       });
     }
 
     if (search) {
-      search.addEventListener('input', () => {
+      search.addEventListener('input', debounce(() => {
         state.q = search.value.trim();
         apply(list, region, status);
-      });
+      }));
     }
 
     apply(list, region, status);

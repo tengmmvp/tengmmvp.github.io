@@ -545,6 +545,7 @@
   let lastResult = '';
   let lastTreeData = null; // 排序后的数据
   let debounceTimer = 0;
+  let draftMaxTimer = 0;
   let currentGutterInner = null;
 
   /* 偏好与草稿 */
@@ -588,6 +589,23 @@
       if (d) input.value = d;
     } catch (e) { /* 忽略 */ }
   }
+
+  function flushDraft() {
+    clearTimeout(draftMaxTimer);
+    draftMaxTimer = 0;
+    saveDraft();
+  }
+
+  // 连续输入满 1 秒强制落盘，为草稿防抖加上界
+  function scheduleDraftFlush() {
+    if (!draftMaxTimer) draftMaxTimer = setTimeout(flushDraft, 1000);
+  }
+
+  // 关页或转后台前冲刷防抖窗口内的草稿
+  window.addEventListener('pagehide', flushDraft);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushDraft();
+  });
 
   /* 核心处理 */
 
@@ -827,7 +845,7 @@
   function render() {
     const source = input.value.trim();
     updateInputGutter();
-    saveDraft();
+    flushDraft();
 
     orderControl.classList.toggle('disabled', !sortToggle.checked);
 
@@ -945,7 +963,9 @@
     input.focus();
     if (lastError.pos !== null) {
       input.setSelectionRange(lastError.pos, lastError.pos + 1);
-      input.scrollTop = Math.max(0, (lastError.line - 3) * 22.3);
+      // 行高取计算值，跟随 --row-h 单一来源
+      const rowH = parseFloat(getComputedStyle(input).lineHeight);
+      input.scrollTop = Math.max(0, (lastError.line - 3) * rowH);
       inputGutter.scrollTop = input.scrollTop;
     }
   }
@@ -967,7 +987,7 @@
     debounceTimer = setTimeout(render, delay);
   }
 
-  input.addEventListener('input', () => { scheduleRender(200); saveDraft(); });
+  input.addEventListener('input', () => { scheduleRender(200); scheduleDraftFlush(); });
 
   // Tab 插入缩进
   input.addEventListener('keydown', e => {
@@ -975,6 +995,7 @@
       e.preventDefault();
       input.setRangeText('  ', input.selectionStart, input.selectionEnd, 'end');
       scheduleRender(120);
+      scheduleDraftFlush();
     }
   });
 

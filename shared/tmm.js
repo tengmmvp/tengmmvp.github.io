@@ -5,16 +5,6 @@ const LS_PREFIX = 'tmm:';
 
 /* 工具函数 */
 
-/** HTML 转义 */
-export function escapeHtml(s) {
-  return String(s ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#x27;');
-}
-
 /** URL 校验 */
 export function safeUrl(u) {
   const s = String(u ?? '').trim();
@@ -33,6 +23,17 @@ export function fmtDate(d) {
     : `${m[1]} 年 ${+m[2]} 月`;
 }
 
+/** 日期补零为 YYYY-MM-DD，供排序比较 */
+export function pad(d) {
+  const m = /^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$/.exec(String(d || ''));
+  return m ? `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3] || '01').padStart(2, '0')}` : '0000-00-00';
+}
+
+/** 提取主机：小写、保留端口、去 userinfo 与 www. 前缀 */
+export function hostOf(u) {
+  try { return new URL(u).host.replace(/^www\./, ''); } catch { return ''; }
+}
+
 /** 创建元素 */
 export function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -46,6 +47,15 @@ export function el(tag, attrs = {}, ...children) {
     node.append(typeof c === 'string' ? document.createTextNode(c) : c);
   }
   return node;
+}
+
+/** 防抖 */
+export function debounce(fn, wait = 150) {
+  let timer = 0;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
 }
 
 /* 数据层 */
@@ -64,26 +74,30 @@ const store = {
 
 const memCache = new Map();
 
-/** 读取 JSON */
-export async function getJSON(path) {
+/** 读取 JSON；网络失败时回退本地缓存并回调 onStale */
+export async function getJSON(path, opts = {}) {
   if (memCache.has(path)) return memCache.get(path);
   try {
     const res = await fetch(path);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     memCache.set(path, data);
-    store.set('json:' + path, data);
+    store.set('json:' + path, { at: Date.now(), data });
     return data;
   } catch (err) {
     const cached = store.get('json:' + path);
-    if (cached != null) { memCache.set(path, cached); return cached; }
+    if (cached && cached.data != null) {
+      memCache.set(path, cached.data);
+      if (opts.onStale) opts.onStale(cached.at);
+      return cached.data;
+    }
     throw new Error(`无法加载 ${path}（${err.message}）`);
   }
 }
 
 /** 读取站点总配置 */
-export async function getConfig() {
-  const cfg = await getJSON(SITE_URL);
+export async function getConfig(opts) {
+  const cfg = await getJSON(SITE_URL, opts);
   return {
     site: {}, profile: {}, projects: [], entrances: [], recent: {},
     sources: {},
@@ -91,10 +105,11 @@ export async function getConfig() {
   };
 }
 
-/** 列出目录内容 */
+/** 列出目录内容，策略默认取自站点配置 */
 export async function listDir(dir, opts = {}) {
-  if ((opts.strategy || 'manifest') === 'github-api') {
-    const gh = opts.github || {};
+  const strategy = opts.strategy ?? (await getConfig()).sources.dirStrategy ?? 'manifest';
+  if (strategy === 'github-api') {
+    const gh = { ...(await getConfig()).sources.github, ...opts.github };
     const api = `https://api.github.com/repos/${gh.user}/${gh.repo}/contents/${dir.replace(/^\/+/, '')}`;
     const res = await fetch(api, { headers: { Accept: 'application/vnd.github+json' } });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
@@ -134,12 +149,53 @@ export function renderList({ container, items, render, empty = '暂无内容', s
   if (status) status.textContent = n ? `共 ${n} 条` : '没有匹配的内容';
 }
 
-/** 错误横幅 */
+/** 博客条目卡片 */
+export function entryNode(e) {
+  const meta = el('p', { class: 'entry-meta chips' });
+  const h = hostOf(e.url);
+  if (h) meta.append(el('span', { class: 'chip' }, h));
+  (e.tags || []).filter(Boolean).forEach(t => meta.append(el('span', { class: 'chip' }, t)));
+  return el('article', { class: 'entry' },
+    el('p', { class: 'entry-date' }, fmtDate(e.date)),
+    el('h3', { class: 'entry-title' },
+      el('a', { href: e.url, target: '_blank', rel: 'noopener noreferrer' }, e.title || '(未命名)')),
+    e.summary ? el('p', { class: 'entry-summary' }, e.summary) : null,
+    meta.children.length ? meta : null,
+  );
+}
+
+/** 每容器每类别仅保留一条横幅 */
+function banner(container, kind) {
+  let node = container.querySelector(`:scope > .notice-banner[data-kind="${kind}"]`);
+  if (!node) {
+    node = el('div', { class: 'notice-banner', role: 'status', 'data-kind': kind });
+    container.prepend(node);
+  }
+  return node;
+}
+
+/** 缓存时间：当天仅时分，跨天附月日 */
+function staleTime(at) {
+  if (!at) return '';
+  const d = new Date(at);
+  const hm = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  return d.toDateString() === new Date().toDateString() ? hm : `${d.getMonth() + 1}月${d.getDate()}日 ${hm}`;
+}
+
+/** 错误横幅，重复调用在同一横幅内追加 */
 export function showError(container, message) {
-  const banner = el('div', { class: 'error-banner', role: 'status' },
-    '数据加载失败：', el('code', {}, message),
-    '。页面展示的是静态快照，内容可能不是最新。');
-  container.prepend(banner);
+  const node = banner(container, 'error');
+  const code = node.querySelector('code');
+  if (code) { code.append(`、${message}`); return; }
+  node.append('数据加载失败：', el('code', {}, message), '。页面展示的是静态快照，内容可能不是最新。');
+}
+
+/** 回退缓存提示，幂等单条 */
+export function showStale(container, at) {
+  const node = banner(container, 'stale');
+  if (node.childNodes.length) return;
+  const time = staleTime(at);
+  node.append(`加载失败，已展示${time ? ` ${time} ` : ''}保存的本地缓存，内容可能不是最新。`);
 }
 
 /* 主题 */
@@ -148,10 +204,10 @@ export function showError(container, message) {
 export function initTheme(toggleSelector) {
   const root = document.documentElement;
   const saved = store.get('theme');
-  const initial = saved === 'dark' || saved === 'light'
+  /* 自行设置当前主题，保证任何时序下切换方向正确 */
+  root.style.colorScheme = saved === 'dark' || saved === 'light'
     ? saved
     : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  root.style.colorScheme = initial;
 
   const btn = toggleSelector && document.querySelector(toggleSelector);
   if (!btn) return;
