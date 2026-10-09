@@ -22,9 +22,9 @@
 │   ├── blog.json              博客注册表
 │   ├── tools.json             工具注册表
 │   └── schema/                JSON Schema（VS Code 编辑即校验）
-├── assets/                    图片与字体
+├── assets/                    图片、字体与图标（assets/icons/）
 ├── admin/                     本地控制台（gitignore，不入库）
-└── favicon 全套 · robots.txt · sitemap.xml · CNAME · docs/
+└── robots.txt · sitemap.xml · CNAME · docs/
 ```
 
 ## 日常操作
